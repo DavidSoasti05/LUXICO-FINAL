@@ -1,14 +1,13 @@
 package principal;
 
-import negocio.SistemaLuxico;
-import modelo.*;
+import utilitaria.SistemaLuxico;
+import negocio.*;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
-
 
 public class App extends JFrame {
 
@@ -57,15 +56,23 @@ public class App extends JFrame {
         }
     }
 
-    // =========================================================
-    // LOGIN
-    // =========================================================
+    private Producto buscarProductoPorCodigo(String codigo) {
+        if (codigo == null) return null;
+        String cod = codigo.trim().toUpperCase();
+        if (cod.isEmpty()) return null;
+
+        ArrayList<Producto> list = sistema.getProductos();
+        for (Producto p : list) {
+            if (p != null && p.getCodigo() != null && p.getCodigo().equals(cod)) return p;
+        }
+        return null;
+    }
+
     private class LoginPanel extends JPanel {
         private JTextField txtUser;
         private JPasswordField txtPass;
 
         public LoginPanel() {
-
             try {
                 setLayout(new GridBagLayout());
                 GridBagConstraints gbc = new GridBagConstraints();
@@ -73,22 +80,22 @@ public class App extends JFrame {
                 gbc.fill = GridBagConstraints.HORIZONTAL;
                 gbc.weightx = 1;
 
-                // ====== LOGO 560x500 (RECORTADO PARA QUE NO EMPUJE EL FORM) ======
                 final int LOGO_W = 560;
                 final int LOGO_H = 500;
 
-                final int MARCO_W = 560;  // ancho visible
-                final int MARCO_H = 260;  // alto visible (ajusta: 220-320)
+                final int MARCO_W = 560;
+                final int MARCO_H = 260;
 
                 JPanel logoPanel = new JPanel() {
                     Image img;
 
                     {
                         try {
-                            String ruta = System.getProperty("user.dir") + "/src/recursos/luxico_jordan.png";
-                            img = new ImageIcon(ruta).getImage();
+                            java.net.URL url = getClass().getResource("/recursos/luxico_jordan.png");
+                            if (url != null) img = new ImageIcon(url).getImage();
+                            else System.out.println("No se encontro /luxico_jordan.png en recursos");
                         } catch (Exception e) {
-                            System.out.println("No se pudo cargar el logo.");
+                            System.out.println("No se pudo cargar el logo: " + e.getMessage());
                         }
                         setOpaque(false);
                         setPreferredSize(new Dimension(MARCO_W, MARCO_H));
@@ -99,13 +106,12 @@ public class App extends JFrame {
                         super.paintComponent(g);
                         if (img != null) {
                             int x = (getWidth() - LOGO_W) / 2;
-                            int y = (getHeight() - LOGO_H) / 2 + 60; // centra y recorta
+                            int y = (getHeight() - LOGO_H) / 2 + 60;
                             g.drawImage(img, x, y, LOGO_W, LOGO_H, this);
                         }
                     }
                 };
 
-                // agregar logo (fila 0)
                 gbc.gridx = 0;
                 gbc.gridy = 0;
                 gbc.gridwidth = 2;
@@ -114,7 +120,6 @@ public class App extends JFrame {
                 gbc.insets = new Insets(50, 8, 0, 8);
                 add(logoPanel, gbc);
 
-                // ===== TITULO (fila 1) =====
                 JLabel title = new JLabel("LUXICO - Login", SwingConstants.CENTER);
                 title.setFont(new Font("Arial", Font.BOLD, 24));
 
@@ -126,7 +131,6 @@ public class App extends JFrame {
                 gbc.fill = GridBagConstraints.HORIZONTAL;
                 add(title, gbc);
 
-                // ===== USUARIO (fila 2) =====
                 gbc.gridwidth = 1;
                 gbc.gridx = 0;
                 gbc.gridy = 2;
@@ -134,39 +138,36 @@ public class App extends JFrame {
                 gbc.fill = GridBagConstraints.NONE;
                 add(new JLabel("Usuario:"), gbc);
 
-                txtUser = new JTextField(16); // menos ancho
+                txtUser = new JTextField(16);
                 gbc.gridx = 1;
                 gbc.gridy = 2;
                 gbc.anchor = GridBagConstraints.WEST;
-                gbc.fill = GridBagConstraints.NONE; // no estirar
+                gbc.fill = GridBagConstraints.NONE;
                 add(txtUser, gbc);
 
-                // ===== CLAVE (fila 3) =====
                 gbc.gridx = 0;
                 gbc.gridy = 3;
                 gbc.anchor = GridBagConstraints.EAST;
                 gbc.fill = GridBagConstraints.NONE;
                 add(new JLabel("Clave:"), gbc);
 
-                txtPass = new JPasswordField(16); // menos ancho
+                txtPass = new JPasswordField(16);
                 gbc.gridx = 1;
                 gbc.gridy = 3;
                 gbc.anchor = GridBagConstraints.WEST;
                 gbc.fill = GridBagConstraints.NONE;
                 add(txtPass, gbc);
 
-                // ===== BOTON (fila 4) =====
                 JButton btnLogin = new JButton("Ingresar");
-                btnLogin.setPreferredSize(new Dimension(220, 34)); // menos ancho que full
+                btnLogin.setPreferredSize(new Dimension(220, 34));
 
                 gbc.gridx = 0;
                 gbc.gridy = 4;
                 gbc.gridwidth = 2;
                 gbc.anchor = GridBagConstraints.CENTER;
-                gbc.fill = GridBagConstraints.NONE; // no estirar
+                gbc.fill = GridBagConstraints.NONE;
                 add(btnLogin, gbc);
 
-                // ===== ESPACIADOR ABAJO (fila 5) =====
                 gbc.gridx = 0;
                 gbc.gridy = 5;
                 gbc.gridwidth = 2;
@@ -198,8 +199,6 @@ public class App extends JFrame {
                 JOptionPane.showMessageDialog(this, "Error creando login.");
             }
         }
-
-
     }
 
     // =========================================================
@@ -241,7 +240,6 @@ public class App extends JFrame {
                 pedidosPanel = new PedidosPanel();
                 reportesPanel = new ReportesPanel();
 
-                // por defecto agrego todos; luego oculto según rol
                 tabs.addTab("Productos", productosPanel);
                 tabs.addTab("Movimientos", movimientosPanel);
                 tabs.addTab("Clientes", clientesPanel);
@@ -265,7 +263,6 @@ public class App extends JFrame {
 
                 lblRol.setText("Usuario: " + u.getUsuario() + " | Rol: " + rol);
 
-                // Quitar todo y agregar según rol para que sea "completa" y controlada
                 tabs.removeAll();
 
                 if (u instanceof Admin) {
@@ -277,12 +274,12 @@ public class App extends JFrame {
                 } else if (u instanceof Bodega) {
                     tabs.addTab("Productos", productosPanel);
                     tabs.addTab("Movimientos", movimientosPanel);
-                    tabs.addTab("Pedidos", pedidosPanel);     // para ver confirmados + preparar
-                    tabs.addTab("Reportes", reportesPanel);   // stock crítico
+                    tabs.addTab("Pedidos", pedidosPanel);
+                    tabs.addTab("Reportes", reportesPanel);
                 } else if (u instanceof Ventas) {
                     tabs.addTab("Clientes", clientesPanel);
                     tabs.addTab("Pedidos", pedidosPanel);
-                    tabs.addTab("Reportes", reportesPanel);   // ventas, pedidos por estado
+                    tabs.addTab("Reportes", reportesPanel);
                 }
 
             } catch (Exception e) {
@@ -297,7 +294,6 @@ public class App extends JFrame {
                 clientesPanel.refrescarTabla();
                 pedidosPanel.refrescarTabla();
             } catch (Exception e) {
-                // nada
             }
         }
     }
@@ -311,9 +307,6 @@ public class App extends JFrame {
         }
     }
 
-    // =========================================================
-    // PRODUCTOS - CRUD
-    // =========================================================
     private class ProductosPanel extends JPanel {
 
         private DefaultTableModel model;
@@ -403,8 +396,6 @@ public class App extends JFrame {
                 int stockMin = Integer.parseInt(stockMinS.trim());
 
                 Producto p;
-
-                // ⚠️ AJUSTA SOLO AQUÍ si tus constructores son diferentes
                 if (tipoSel.toString().equals("REGULAR")) {
                     p = new ProductoRegular(codigo.trim().toUpperCase(), modelo.trim(), talla.trim(), precio, stock, stockMin);
                 } else {
@@ -432,29 +423,37 @@ public class App extends JFrame {
                 String codigo = JOptionPane.showInputDialog(this, "Código del producto a editar:");
                 if (codigo == null) return;
 
-                Producto p = sistema.buscarProducto(codigo);
+                Producto p = buscarProductoPorCodigo(codigo);
                 if (p == null) {
                     JOptionPane.showMessageDialog(this, "Producto no encontrado.");
                     return;
                 }
 
-                String nuevoModelo = JOptionPane.showInputDialog(this, "Nuevo modelo (deja vacío para no cambiar):", p.getModelo());
+                String nuevoModelo = JOptionPane.showInputDialog(this, "Nuevo modelo (vacío = no cambiar):", p.getModelo());
                 if (nuevoModelo == null) return;
 
-                String nuevaTalla = JOptionPane.showInputDialog(this, "Nueva talla (deja vacío para no cambiar):", p.getTalla());
+                String nuevaTalla = JOptionPane.showInputDialog(this, "Nueva talla (vacío = no cambiar):", p.getTalla());
                 if (nuevaTalla == null) return;
 
-                String nuevoPrecioS = JOptionPane.showInputDialog(this, "Nuevo precio (0 para no cambiar):", String.valueOf(p.getPrecio()));
+                String nuevoPrecioS = JOptionPane.showInputDialog(this, "Nuevo precio (0 = no cambiar):", String.valueOf(p.getPrecio()));
                 if (nuevoPrecioS == null) return;
 
-                String nuevoStockMinS = JOptionPane.showInputDialog(this, "Nuevo stock mínimo (-1 para no cambiar):", String.valueOf(p.getStockMin()));
+                String nuevoStockMinS = JOptionPane.showInputDialog(this, "Nuevo stock mínimo (-1 = no cambiar):", String.valueOf(p.getStockMin()));
                 if (nuevoStockMinS == null) return;
 
-                double nuevoPrecio = Double.parseDouble(nuevoPrecioS.trim());
-                int nuevoStockMin = Integer.parseInt(nuevoStockMinS.trim());
+                // aplicar cambios al OBJETO
+                if (!nuevoModelo.trim().isEmpty()) p.setModelo(nuevoModelo.trim());
+                if (!nuevaTalla.trim().isEmpty()) p.setTalla(nuevaTalla.trim());
 
-                boolean ok = sistema.editarProducto(codigo, nuevoModelo, nuevaTalla, nuevoPrecio, nuevoStockMin);
-                JOptionPane.showMessageDialog(this, ok ? "Producto actualizado." : "No se actualizó.");
+                double nuevoPrecio = Double.parseDouble(nuevoPrecioS.trim());
+                if (nuevoPrecio > 0) p.setPrecio(nuevoPrecio);
+
+                int nuevoStockMin = Integer.parseInt(nuevoStockMinS.trim());
+                if (nuevoStockMin >= 0) p.setStockMin(nuevoStockMin);
+
+                sistema.guardarTodo();
+
+                JOptionPane.showMessageDialog(this, "Producto actualizado.");
                 refrescarTabla();
 
             } catch (NumberFormatException nfe) {
@@ -474,12 +473,21 @@ public class App extends JFrame {
                 String codigo = JOptionPane.showInputDialog(this, "Código del producto a eliminar:");
                 if (codigo == null) return;
 
-                int op = JOptionPane.showConfirmDialog(this, "¿Seguro de eliminar " + codigo + "?", "Confirmar",
+                Producto p = buscarProductoPorCodigo(codigo);
+                if (p == null) {
+                    JOptionPane.showMessageDialog(this, "Producto no encontrado.");
+                    return;
+                }
+
+                int op = JOptionPane.showConfirmDialog(this,
+                        "¿Seguro de eliminar " + p.getCodigo() + " - " + p.getModelo() + "?",
+                        "Confirmar",
                         JOptionPane.YES_NO_OPTION);
 
                 if (op != JOptionPane.YES_OPTION) return;
 
-                boolean ok = sistema.eliminarProducto(codigo);
+                boolean ok = sistema.eliminarProducto(p);
+
                 JOptionPane.showMessageDialog(this, ok ? "Producto eliminado." : "No se pudo eliminar.");
                 refrescarTabla();
 
@@ -489,9 +497,6 @@ public class App extends JFrame {
         }
     }
 
-    // =========================================================
-    // MOVIMIENTOS INVENTARIO
-    // =========================================================
     private class MovimientosPanel extends JPanel {
 
         private DefaultTableModel model;
@@ -529,8 +534,12 @@ public class App extends JFrame {
                 model.setRowCount(0);
                 ArrayList<MovimientoInventario> list = sistema.getMovimientos();
                 for (MovimientoInventario m : list) {
+                    // OO puro: MovimientoInventario tiene Producto
+                    Producto p = m.getProducto();
+                    String cod = (p != null) ? p.getCodigo() : "N/A";
+
                     model.addRow(new Object[]{
-                            m.getCodigoProducto(), m.getTipo(), m.getCantidad(), m.getFecha(), m.getMotivo()
+                            cod, m.getTipo(), m.getCantidad(), m.getFecha(), m.getMotivo()
                     });
                 }
             } catch (Exception e) {
@@ -548,6 +557,12 @@ public class App extends JFrame {
                 String codigo = JOptionPane.showInputDialog(this, "Código producto:");
                 if (codigo == null) return;
 
+                Producto prod = buscarProductoPorCodigo(codigo);
+                if (prod == null) {
+                    JOptionPane.showMessageDialog(this, "Producto no encontrado.");
+                    return;
+                }
+
                 Object[] tipos = {"ENTRADA", "SALIDA", "DEVOLUCION"};
                 Object tipoSel = JOptionPane.showInputDialog(this, "Tipo:", "Movimiento",
                         JOptionPane.QUESTION_MESSAGE, null, tipos, tipos[0]);
@@ -561,10 +576,11 @@ public class App extends JFrame {
 
                 int cantidad = Integer.parseInt(cantS.trim());
                 String fecha = LocalDate.now().toString();
-
                 TipoMovimiento tipo = TipoMovimiento.valueOf(tipoSel.toString());
 
-                boolean ok = sistema.registrarMovimiento(codigo, tipo, cantidad, fecha, motivo);
+                // ✅ OO puro: se manda el OBJETO Producto
+                boolean ok = sistema.registrarMovimiento(prod, tipo, cantidad, fecha, motivo);
+
                 JOptionPane.showMessageDialog(this, ok ? "Movimiento registrado." : "No se pudo registrar.");
                 refrescarTabla();
 
@@ -576,9 +592,6 @@ public class App extends JFrame {
         }
     }
 
-    // =========================================================
-    // CLIENTES - CRUD
-    // =========================================================
     private class ClientesPanel extends JPanel {
 
         private DefaultTableModel model;
@@ -653,7 +666,6 @@ public class App extends JFrame {
                 String correo = JOptionPane.showInputDialog(this, "Correo (@gmail.com, @outlook.com, @hotmail.com, @icloud.com):");
                 if (correo == null) return;
 
-                // ⚠️ AJUSTA si tu constructor de Cliente es diferente
                 Cliente c = new Cliente(cedula.trim(), nombre.trim(), dir.trim(), tel.trim(), correo.trim());
 
                 boolean ok = sistema.registrarCliente(c);
@@ -726,9 +738,6 @@ public class App extends JFrame {
         }
     }
 
-    // =========================================================
-    // PEDIDOS
-    // =========================================================
     private class PedidosPanel extends JPanel {
 
         private DefaultTableModel model;
@@ -782,8 +791,13 @@ public class App extends JFrame {
                 model.setRowCount(0);
                 ArrayList<Pedido> list = sistema.getPedidos();
                 for (Pedido p : list) {
+
+                    Cliente c = p.getCliente();
+                    String nombre = (c != null) ? c.getNombre() : "N/A";
+                    String cedula = (c != null) ? c.getCedula() : "N/A";
+
                     model.addRow(new Object[]{
-                            p.getId(), p.getNombreCliente(), p.getCedulaCliente(),
+                            p.getId(), nombre, cedula,
                             p.getFechaCreacion(), p.getEstado(), p.getTotal()
                     });
                 }
@@ -802,8 +816,14 @@ public class App extends JFrame {
                 String cedula = JOptionPane.showInputDialog(this, "Cédula del cliente:");
                 if (cedula == null) return;
 
+                Cliente c = sistema.buscarCliente(cedula);
+                if (c == null) {
+                    JOptionPane.showMessageDialog(this, "Cliente no encontrado.");
+                    return;
+                }
+
                 String fecha = LocalDate.now().toString();
-                int id = sistema.crearPedido(cedula, fecha);
+                int id = sistema.crearPedido(c, fecha);
 
                 JOptionPane.showMessageDialog(this, id > 0 ? "Pedido creado. ID: " + id : "No se pudo crear.");
                 refrescarTabla();
@@ -832,7 +852,13 @@ public class App extends JFrame {
                 int id = Integer.parseInt(idS.trim());
                 int cant = Integer.parseInt(cantS.trim());
 
-                boolean ok = sistema.agregarProductoAPedido(id, cod, cant);
+                Producto prod = buscarProductoPorCodigo(cod);
+                if (prod == null) {
+                    JOptionPane.showMessageDialog(this, "Producto no encontrado.");
+                    return;
+                }
+                boolean ok = sistema.agregarProductoAPedido(id, prod, cant);
+
                 JOptionPane.showMessageDialog(this, ok ? "Item agregado." : "No se pudo agregar.");
                 refrescarTabla();
 
@@ -856,9 +882,13 @@ public class App extends JFrame {
                     return;
                 }
 
+                Cliente c = p.getCliente();
+                String nombre = (c != null) ? c.getNombre() : "N/A";
+                String cedula = (c != null) ? c.getCedula() : "N/A";
+
                 StringBuilder sb = new StringBuilder();
                 sb.append("ID: ").append(p.getId()).append("\n");
-                sb.append("Cliente: ").append(p.getNombreCliente()).append(" (").append(p.getCedulaCliente()).append(")\n");
+                sb.append("Cliente: ").append(nombre).append(" (").append(cedula).append(")\n");
                 sb.append("Fecha: ").append(p.getFechaCreacion()).append("\n");
                 sb.append("Estado: ").append(p.getEstado()).append("\n");
                 sb.append("Total: $").append(p.getTotal()).append("\n\n");
@@ -957,9 +987,6 @@ public class App extends JFrame {
         }
     }
 
-    // =========================================================
-    // REPORTES + RESET
-    // =========================================================
     private class ReportesPanel extends JPanel {
 
         public ReportesPanel() {
@@ -1057,16 +1084,19 @@ public class App extends JFrame {
                     for (int i = 0; i < p.getDetalles().size(); i++) {
                         DetallePedido d = p.getDetalles().get(i);
 
+                        Producto prod = d.getProducto();
+                        String cod = (prod != null) ? prod.getCodigo() : "N/A";
+
                         int idx = -1;
                         for (int k = 0; k < n; k++) {
-                            if (codigos[k].equals(d.getCodigoProducto())) {
+                            if (codigos[k].equals(cod)) {
                                 idx = k;
                                 break;
                             }
                         }
 
                         if (idx == -1) {
-                            codigos[n] = d.getCodigoProducto();
+                            codigos[n] = cod;
                             cantidades[n] = d.getCantidad();
                             n++;
                         } else {
@@ -1124,7 +1154,6 @@ public class App extends JFrame {
                 sistema.resetSistema();
                 JOptionPane.showMessageDialog(this, "Sistema reiniciado.");
 
-                // refrescar tablas y volver al login
                 mainPanel.refrescarTodo();
                 logout();
 
@@ -1134,9 +1163,6 @@ public class App extends JFrame {
         }
     }
 
-    // =========================================================
-    // UTIL
-    // =========================================================
     private void mostrarTexto(String titulo, String texto) {
         try {
             JTextArea area = new JTextArea(texto);

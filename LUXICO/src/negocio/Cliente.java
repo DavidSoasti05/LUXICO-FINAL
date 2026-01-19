@@ -1,10 +1,10 @@
-package modelo;
+package negocio;
 
 import java.io.Serializable;
 
 public class Cliente implements Serializable {
     private static final long serialVersionUID = 1L;
-    private String cedula;     // IDENTIFICADOR (cédula ecuatoriana)
+    private String cedula;
     private String nombre;
     private String direccion;
     private String telefono;
@@ -12,7 +12,6 @@ public class Cliente implements Serializable {
 
     public Cliente(String cedula, String nombre, String direccion, String telefono, String correo) {
         try {
-            // Si algo falla, NO crear cliente válido
             if (!setCedula(cedula)) throw new Exception();
             if (nombre == null || nombre.trim().isEmpty()) throw new Exception();
             if (direccion == null || direccion.trim().isEmpty()) throw new Exception();
@@ -24,7 +23,6 @@ public class Cliente implements Serializable {
 
         } catch (Exception e) {
             System.out.println("Error creando cliente: datos inválidos. NO se registró.");
-            // Marca inválido
             this.cedula = null;
             this.nombre = null;
             this.direccion = null;
@@ -33,21 +31,19 @@ public class Cliente implements Serializable {
         }
     }
 
-    // ---------------- GETTERS ----------------
     public String getCedula() { return cedula; }
     public String getNombre() { return nombre; }
     public String getDireccion() { return direccion; }
     public String getTelefono() { return telefono; }
     public String getCorreo() { return correo; }
 
-    // ---------------- SETTERS con TRY/CATCH ----------------
     public boolean setCedula(String cedula) {
         try {
             if (cedula == null) throw new Exception();
             cedula = cedula.replaceAll("[^0-9]", "");
 
             if (!esCedulaEcuatoriana(cedula)) throw new Exception();
-            this.cedula = cedula; // ya está limpia
+            this.cedula = cedula;
             return true;
 
         } catch (Exception e) {
@@ -112,7 +108,6 @@ public class Cliente implements Serializable {
     }
 
     // ---------------- VALIDACIONES (TRY/CATCH) ----------------
-
     // Validación de cédula ecuatoriana:
     // - 10 dígitos numéricos
     // - provincia 01..24
@@ -161,8 +156,6 @@ public class Cliente implements Serializable {
         try {
             if (correo == null) throw new Exception();
             correo = correo.trim().toLowerCase();
-
-            // Debe contener @ y algo antes
             int at = correo.indexOf('@');
             if (at <= 0) throw new Exception();
 

@@ -1,4 +1,4 @@
-package modelo;
+package negocio;
 
 import java.io.Serializable;
 
@@ -20,7 +20,7 @@ public class ProductoEdicionLimitada extends Producto implements Serializable {
     public ProductoEdicionLimitada(String codigo, String modelo, String talla, double precio, int stock, int stockMin) {
         super(codigo, modelo, talla, precio, stock, stockMin);
         try {
-            this.numeroSerie = 1; // default
+            this.numeroSerie = 1;
         } catch (Exception e) {
             this.numeroSerie = 1;
         }

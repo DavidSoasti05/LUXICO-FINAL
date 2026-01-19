@@ -1,4 +1,4 @@
-package modelo;
+package negocio;
 
 public enum EstadoPedido {
     PENDIENTE,
